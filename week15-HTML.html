@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOODPICKER ITF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #0f4c5c;
+    --mint: #e6f2ee;
+    --paper: #ffffff;
+    --chili: #e4452b;
+    --chili-dark: #b92f1a;
+    --sun: #f4b81f;
+    --ink: #1d2b2f;
+    --muted: #5d6f73;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background: var(--mint);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Navbar */
+  .navbar {
+    position: sticky; top: 0; z-index: 10;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 14px 28px;
+    background: var(--teal);
+    color: #fff;
+    font-size: 0.9rem;
+  }
+  .navbar .brand { font-family: 'Mitr', sans-serif; font-size: 1.25rem; letter-spacing: 0.06em; }
+  .navbar .right { text-align: right; }
+
+  /* Main */
+  main {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 40px 20px 56px;
+    gap: 28px;
+  }
+  .heading { text-align: center; }
+  .heading h1 { font-family: 'Mitr', sans-serif; font-weight: 500; font-size: 1.9rem; color: var(--teal); }
+  .heading p { color: var(--muted); margin-top: 6px; }
+
+  .card {
+    width: min(380px, 100%);
+    background: var(--paper);
+    border-radius: 24px;
+    padding: 20px 20px 26px;
+    text-align: center;
+    box-shadow: 0 18px 40px -18px rgba(15, 76, 92, 0.45);
+    border: 2px solid var(--teal);
+  }
+  .photo {
+    width: 100%; aspect-ratio: 4 / 3;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--mint);
+  }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card.pop .photo img, .card.pop .info { animation: pop 0.35s ease-out; }
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.94); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .info { padding-top: 18px; }
+  .name { font-family: 'Mitr', sans-serif; font-weight: 500; font-size: 1.6rem; color: var(--chili); }
+  .desc { color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .price {
+    display: inline-block; margin-top: 14px;
+    background: var(--sun); color: var(--ink);
+    font-weight: 600; padding: 6px 18px; border-radius: 999px;
+  }
+
+  /* Button */
+  .pick-btn {
+    font-family: 'Mitr', sans-serif; font-size: 1.15rem;
+    width: min(380px, 100%);
+    padding: 16px 24px;
+    border: none; border-radius: 16px;
+    background: var(--chili); color: #fff;
+    cursor: pointer;
+    box-shadow: 0 6px 0 var(--chili-dark);
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .pick-btn:hover { background: #ee5238; }
+  .pick-btn:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--chili-dark); }
+  .pick-btn:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
+
+  @media (max-width: 520px) {
+    .navbar { padding: 12px 14px; font-size: 0.8rem; }
+    .navbar .brand { font-size: 1rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card.pop .photo img, .card.pop .info { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <span>69070037 CHUTIWAT WANGPHITHAKWONG</span>
+  <span class="brand">FOODPICKER ITF</span>
+  <span class="right">Week15</span>
+</header>
+
+<main>
+  <div class="heading">
+    <h1>วันนี้กินอะไรดี?</h1>
+    <p>กดปุ่มด้านล่าง ให้เราช่วยเลือกเมนูให้</p>
+  </div>
+
+  <section class="card" id="card" aria-live="polite">
+    <div class="photo"><img id="foodImg" alt=""></div>
+    <div class="info">
+      <h2 class="name" id="foodName"></h2>
+      <p class="desc" id="foodDesc"></p>
+      <span class="price" id="foodPrice"></span>
+    </div>
+  </section>
+
+  <button class="pick-btn" id="pickBtn" type="button">สุ่มเมนูอาหาร</button>
+</main>
+
+<script>
+  // รายการอาหาร (มี 8 รายการ)
+  // ถ้าอยากใช้รูปจริง ให้ใส่ลิงก์รูปในช่อง image เช่น image: "https://..."
+  // ถ้าเว้นว่างไว้ จะแสดงรูปภาพประกอบที่สร้างจากโค้ดแทน
+  const foods = [
+    { name: "ข้าวมันไก่", desc: "ไก่ต้มนุ่ม ข้าวมันหอม น้ำจิ้มเต้าเจี้ยวและน้ำซุปร้อนๆ", price: "50-65 บาท", emoji: "🍗", bg: "#fde7c2", image: "" },
+    { name: "ผัดกะเพราหมูสับไข่ดาว", desc: "กะเพราหอมฉุน เผ็ดจัดจ้าน ราดข้าวร้อนๆ พร้อมไข่ดาวกรอบ", price: "50-60 บาท", emoji: "🍳", bg: "#fbd3cb", image: "" },
+    { name: "ส้มตำไทย", desc: "ส้มตำรสเปรี้ยวหวานเผ็ด กินกับไก่ย่างและข้าวเหนียว", price: "40-60 บาท", emoji: "🥗", bg: "#d6ecc9", image: "" },
+    { name: "ก๋วยเตี๋ยวเรือ", desc: "น้ำซุปเข้มข้น เส้นเหนียวนุ่ม เนื้อและหมูชิ้นโตหลายชิ้น", price: "15-60 บาท", emoji: "🍜", bg: "#f6d9b8", image: "" },
+    { name: "ข้าวผัดปู", desc: "ข้าวผัดเม็ดร่วน เนื้อปูแน่นๆ เสิร์ฟพร้อมพริกน้ำปลาและมะนาว", price: "70-100 บาท", emoji: "🦀", bg: "#fbd0c0", image: "" },
+    { name: "ต้มยำกุ้ง", desc: "ซุปเปรี้ยวเผ็ดหอมสมุนไพร กุ้งสดตัวโต เห็ดและข่าเต็มถ้วย", price: "120-180 บาท", emoji: "🍲", bg: "#fbc9a8", image: "" },
+    { name: "ผัดไทยกุ้งสด", desc: "เส้นจันท์ผัดซอสมะขาม โรยถั่วลิสงป่น เสิร์ฟพร้อมกุ้งสดและถั่วงอก", price: "60-80 บาท", emoji: "🍤", bg: "#fde4b0", image: "" },
+    { name: "หมูกรอบคั่วพริกเกลือ", desc: "หมูกรอบนอกนุ่มใน คั่วพริกเกลือหอมๆ กินกับข้าวสวยร้อนๆ", price: "60-80 บาท", emoji: "🥓", bg: "#e8dcc6", image: "" }
+  ];
+
+  // สร้างรูปภาพประกอบ (SVG) จากอีโมจิ ใช้เมื่อไม่ได้ใส่ลิงก์รูป
+  function makeIllustration(food) {
+    const svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">' +
+      '<rect width="400" height="300" fill="' + food.bg + '"/>' +
+      '<ellipse cx="200" cy="165" rx="150" ry="104" fill="#ffffff"/>' +
+      '<ellipse cx="200" cy="165" rx="118" ry="80" fill="none" stroke="#e5e5e5" stroke-width="3"/>' +
+      '<text x="200" y="198" font-size="110" text-anchor="middle">' + food.emoji + '</text>' +
+      '</svg>';
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+
+  const card = document.getElementById('card');
+  const img = document.getElementById('foodImg');
+  const nameEl = document.getElementById('foodName');
+  const descEl = document.getElementById('foodDesc');
+  const priceEl = document.getElementById('foodPrice');
+  const btn = document.getElementById('pickBtn');
+
+  let currentIndex = -1;
+
+  function show(index) {
+    const f = foods[index];
+    const fallback = makeIllustration(f);
+    img.onerror = function () { img.onerror = null; img.src = fallback; };
+    img.src = f.image || fallback;
+    img.alt = f.name;
+    nameEl.textContent = f.name;
+    descEl.textContent = f.desc;
+    priceEl.textContent = "ราคา " + f.price;
+
+    // เล่นแอนิเมชันทุกครั้งที่สุ่ม
+    card.classList.remove('pop');
+    void card.offsetWidth;
+    card.classList.add('pop');
+  }
+
+  function randomFood() {
+    let next;
+    do {
+      next = Math.floor(Math.random() * foods.length);
+    } while (next === currentIndex); // ไม่ให้สุ่มได้เมนูเดิมซ้ำติดกัน
+    currentIndex = next;
+    show(currentIndex);
+  }
+
+  btn.addEventListener('click', randomFood);
+  randomFood(); // แสดงเมนูแรกตอนเปิดหน้าเว็บ
+</script>
+</body>
+</html>
